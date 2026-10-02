@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Neon Beat — Extended</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ======================= ГЛАВНОЕ МЕНЮ ======================= -->
+  <div class="screen active" id="scr-menu">
+    <h1 class="logo">NEON BEAT</h1>
+    <div class="subtitle">W&nbsp;A&nbsp;S&nbsp;D&nbsp;&nbsp;&nbsp;R&nbsp;H&nbsp;Y&nbsp;T&nbsp;H&nbsp;M&nbsp;&nbsp;&nbsp;G&nbsp;A&nbsp;M&nbsp;E</div>
+    <div class="menu-btns">
+      <button class="btn big" onclick="openSongs()">▶ Играть</button>
+      <button class="btn" onclick="startSong(SONGS[0])">📖 Обучение (трек 0)</button>
+      <button class="btn" onclick="openEditor()">🎵 Редактор треков</button>
+      <button class="btn" onclick="show('scr-settings')">⚙ Настройки</button>
+    </div>
+  </div>
+
+  <!-- ======================= ВЫБОР ПЕСНИ ======================= -->
+  <div class="screen col" id="scr-songs">
+    <h2>ВЫБОР ПЕСНИ</h2>
+    <div class="song-list" id="songList"></div>
+    <button class="btn" onclick="show('scr-menu')">← Назад</button>
+  </div>
+
+  <!-- ======================= НАСТРОЙКИ ======================= -->
+  <div class="screen col" id="scr-settings">
+    <h2>НАСТРОЙКИ</h2>
+    <div class="panel">
+      <div class="row">
+        <label>🔊 Громкость эффектов</label>
+        <input type="range" id="setSfx" min="0" max="100" value="80">
+        <span class="val" id="setSfxV">80%</span>
+      </div>
+      <div class="row">
+        <label>🎧 Громкость музыки (фон)</label>
+        <input type="range" id="setMus" min="0" max="100" value="70">
+        <span class="val" id="setMusV">70%</span>
+      </div>
+      <div class="row">
+        <label>⏱ Калибровка</label>
+        <input type="range" id="setCal" min="-200" max="200" value="0">
+        <span class="val" id="setCalV">0 мс</span>
+      </div>
+      <div class="row">
+        <label>📐 Сетка в редакторе</label>
+        <input type="checkbox" id="setGrid" checked>
+      </div>
+      <div class="row col">
+        <label>🎼 Вид нот</label>
+        <div class="radios">
+          <label><input type="radio" name="nv" value="classic" checked> Классический (ноты): C D E F</label>
+          <label><input type="radio" name="nv" value="numeric"> Классический (цифры): 1 2 3 4</label>
+          <label><input type="radio" name="nv" value="letter"> Буквенно-порядковый: A B C D</label>
+        </div>
+      </div>
+      <div class="row col">
+        <label>🎨 Качество графики</label>
+        <div class="chips" id="gfxChips">
+          <button class="chip" data-gfx="potato">🥔 Картошка</button>
+          <button class="chip on" data-gfx="normal">✨ Обычная</button>
+          <button class="chip" data-gfx="juicy">🌈 Сочная</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>🖤 Контрастный режим (AMOLED)</label>
+        <input type="checkbox" id="setContrast">
+      </div>
+      <div class="row">
+        <label>🎵 Показывать биты (жёлтые линии)</label>
+        <input type="checkbox" id="setBeats" checked>
+      </div>
+      <div class="row col">
+        <label>🎨 Палитра (формат: объект=#rrggbb[aa])</label>
+        <textarea id="setPalette" class="palette-area" rows="6" spellcheck="false"></textarea>
+        <div class="chips">
+          <button class="chip" onclick="applyPaletteFromText()">Применить</button>
+          <button class="chip" onclick="loadPaletteFile()">📁 .txt</button>
+          <button class="chip" onclick="exportPalette()">📤 Экспорт</button>
+          <button class="chip" onclick="resetPalette()">↺ Сброс</button>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn full" onclick="resetSets()">Сбросить к умолчаниям</button>
+      </div>
+    </div>
+    <button class="btn" onclick="show('scr-menu')">⬅ Меню</button>
+    <input type="file" id="setPaletteFile" class="file-hidden" accept=".txt,text/plain">
+  </div>
+
+  <!-- ======================= РЕДАКТОР ======================= -->
+  <div class="screen col" id="scr-editor">
+    <div class="ed-top">
+      <div class="grp">
+        <span class="lbl">Имя</span>
+        <input type="text" id="edName" class="ed-name" value="Мой трек">
+      </div>
+      <div class="grp">
+        <span class="lbl">BPM</span>
+        <input type="number" id="edBpm" min="40" max="300" value="120" style="width:64px">
+      </div>
+      <div class="grp">
+        <span class="lbl">Сетка</span>
+        <select id="edGrid">
+          <option value="1">1/1</option>
+          <option value="2">1/2</option>
+          <option value="4" selected>1/4</option>
+          <option value="8">1/8</option>
+          <option value="16">1/16</option>
+        </select>
+      </div>
+      <div class="grp">
+        <button class="chip on" id="edModeTap">Тап/Холд</button>
+        <button class="chip" id="edModePiano">Пианино</button>
+      </div>
+      <div class="grp">
+        <button class="btn small" onclick="edUndo()" title="Отменить (Ctrl+Z)">↩</button>
+        <button class="btn small" onclick="edRedo()" title="Повторить (Ctrl+Y)">↪</button>
+      </div>
+      <div class="ed-actions">
+        <button class="btn small accent" onclick="edSave()" title="Сохранить">💾</button>
+        <button class="btn small" onclick="edExport()" title="Экспорт JSON">📤</button>
+        <button class="btn small" onclick="edImportFile.click()" title="Импорт JSON">📥</button>
+        <button class="btn small" onclick="edImportBg()" title="Фоновая музыка + анализ битов">🎧</button>
+        <button class="btn small danger" onclick="edClear()" title="Очистить всё">🗑</button>
+      </div>
+    </div>
+
+    <div class="ed-body">
+      <!-- ЛЕВАЯ ПАНЕЛЬ -->
+      <div class="ed-side">
+        <div class="side-block">
+          <div class="side-title">Нота</div>
+          <div class="chips vert">
+            <button class="chip full on" id="chipTap">Тап</button>
+            <button class="chip full" id="chipHold">Холд</button>
+            <button class="chip full" id="chipSkip">⊘ Пропуск</button>
+          </div>
+          <div id="grpHoldLen" style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <span class="side-title" style="margin:0">Холд (долей)</span>
+            <button class="chip" onclick="edHoldLen(-0.5)">−</button>
+            <span class="side-val" id="edHoldLenV">1</span>
+            <button class="chip" onclick="edHoldLen(0.5)">+</button>
+          </div>
+        </div>
+
+        <div class="side-block">
+          <div class="side-title">Звук</div>
+          <div class="chips vert">
+            <button class="chip full on" id="instSynth" onclick="edInst('synth')">Синтезатор</button>
+            <button class="chip full" id="instDrum" onclick="edInst('drum')">Барабаны</button>
+            <button class="chip full" id="instEmpty" onclick="edInst('empty')">Пустая (без звука)</button>
+            <button class="chip full" id="instCustom" onclick="edInst('custom')">Кастом</button>
+          </div>
+
+          <!-- Параметры синтезатора: нота+октава прячутся в режиме пианино -->
+          <div id="synthParams" style="margin-top:6px;display:flex;flex-direction:column;gap:5px">
+            <div class="side-params" id="synthToneWrap">
+              <select id="edTone" class="grow" title="Нота"></select>
+              <select id="edOct" title="Октава">
+                <option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option>
+              </select>
+            </div>
+            <select id="edWave" class="full">
+              <option value="sine">Синус</option>
+              <option value="square">Квадрат</option>
+              <option value="sawtooth">Пила</option>
+              <option value="triangle">Треугольник</option>
+            </select>
+          </div>
+
+          <div id="drumParams" class="hidden" style="margin-top:6px">
+            <div class="chips vert" id="drumChips"></div>
+          </div>
+
+          <div id="customParams" class="hidden" style="margin-top:6px;display:flex;flex-direction:column;gap:5px">
+            <select id="edCustomSel" class="full"><option>— нет —</option></select>
+            <button class="chip full" onclick="edCustomFile.click()">＋ Загрузить звук</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- КАНВАС -->
+      <canvas id="edCv"></canvas>
+
+      <!-- ПРАВАЯ ПАНЕЛЬ -->
+      <div class="ed-side right">
+        <div class="side-block">
+          <div class="side-title">Воспроизведение</div>
+          <div class="chips vert">
+            <button class="chip full" onclick="edTestSound()">🔊 Тест</button>
+            <button class="chip full" onclick="edPreview(false)">▶ Прослушать</button>
+            <button class="chip full" onclick="edAutoDemo()">🤖 Авто-демо</button>
+            <button class="chip full" onclick="edPlayDemo(false)">🎮 Демо (играть)</button>
+          </div>
+        </div>
+        <div class="side-block">
+          <div class="side-title">Разметка битов</div>
+          <div class="side-info" id="edBeatRecInfo">Автоанализ: 0 битов</div>
+          <div class="chips vert">
+            <button class="chip full accent" id="edBeatRecStart" onclick="edStartBeatRecording()">✋ Разметить вручную</button>
+            <button class="chip full" id="edBeatRecStop" onclick="edStopBeatRecording()" disabled>⏹ Остановить</button>
+            <button class="chip full accent" id="edBeatRecSave" onclick="edSaveBeatRecording()" disabled>💾 Сохранить биты</button>
+            <button class="chip full danger" id="edBeatRecClear" onclick="edClearBeats()">🗑 Очистить биты</button>
+          </div>
+          <div class="hint" style="border-top:0;padding-top:2px">
+            Во время проигрывания нажимайте ЛКМ или касайтесь канваса в ритм песни. Жёлтые линии — сохранённые биты.
+          </div>
+        </div>
+        <div class="side-block">
+          <div class="side-title">Инфо</div>
+          <div class="side-info" id="edInfo"></div>
+        </div>
+        <div class="side-block">
+          <div class="side-title">Фон</div>
+          <div class="side-info" id="edBgName">— нет —</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ed-bottom">
+      <div class="ed-note-list" id="edNoteList"></div>
+      <div class="hint" id="edHint">ЛКМ — добавить · ПКМ — меню · Пробел — прослушивание · F1 — помощь</div>
+    </div>
+
+    <input type="file" id="edImportFile" class="file-hidden" accept=".json,application/json">
+    <input type="file" id="edBgFile" class="file-hidden" accept="audio/*">
+    <input type="file" id="edCustomFile" class="file-hidden" accept="audio/*">
+  </div>
+
+  <!-- ======================= ИГРА ======================= -->
+  <div class="screen" id="scr-game">
+    <canvas id="cv"></canvas>
+
+    <div class="overlay hidden" id="pauseOv">
+      <h2>⏸ ПАУЗА</h2>
+      <p>Игра приостановлена. ESC/ENTER или клик — продолжить.</p>
+      <div class="menu-btns">
+        <button class="btn big" onclick="togglePause()">▶ Продолжить</button>
+        <button class="btn" onclick="restartSong()">🔁 Заново</button>
+        <button class="btn">⬅ Вернуться назад</button>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="resOv">
+      <div class="res-title">ТРЕК ЗАВЕРШЁН!</div>
+      <div class="rank" id="resRank">S</div>
+      <div class="res-stats" id="resStats"></div>
+      <div class="menu-btns">
+        <button class="btn big">Продолжить</button>
+        <button class="btn">🔁 Заново</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
